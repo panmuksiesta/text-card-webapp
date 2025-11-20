@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>文字卡片產生器 v2</title>
+  <title>文字卡片產生器 v2.1</title>
 
   <!-- 讓手機版好操作 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,7 +14,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="文字卡片產生器" />
 
-  <!-- Google Fonts -->
+  <!-- Google Fonts：Noto Sans / Serif TC -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Serif+TC:wght@400;700&display=swap" />
 
   <!-- html2canvas：把預覽區轉成圖片 -->
@@ -117,6 +117,7 @@
     }
 
     #fontSelect,
+    #fontSizeGlobal,
     #sizePreset,
     #bgPreset {
       padding: 0.25rem 0.4rem;
@@ -156,7 +157,7 @@
       width: 100%;
       min-height: 220px;
       padding: 0.5rem;
-      font-size: 0.95rem;
+      font-size: 1rem; /* 會被 JS 覆蓋成全局文字大小 */
       border-radius: 8px;
       border: 1px solid #ccc;
       line-height: 1.5;
@@ -214,6 +215,7 @@
       line-height: 1.6;
       color: #333;
       position: relative;
+      font-size: 1rem; /* 會被 JS 覆蓋成全局文字大小 */
     }
 
     #previewText {
@@ -347,30 +349,84 @@
 </head>
 <body>
   <div class="container">
-    <h1>文字卡片產生器 v2（文字 ➜ 圖片）</h1>
-    <div class="subtitle">進階文字編輯 · 奶油 / 粉色 / 深色背景 · IG / 桌布比例 · 可調大小 / 位置圖片</div>
+    <h1>文字卡片產生器 v2.1（文字 ➜ 圖片）</h1>
+    <div class="subtitle">進階文字編輯 · 20 種字型 · 文字大小 · 奶油 / 粉色 / 深色 · IG / 桌布比例 · 可調圖片</div>
 
-    <!-- 上方工具列：字型、尺寸與背景樣式 -->
+    <!-- 上方工具列：字型、文字大小、尺寸與背景樣式 -->
     <div class="panel">
       <div class="top-bar">
         <div class="top-bar-group">
           <label for="fontSelect">字型：</label>
           <select id="fontSelect">
-            <option value='system-ui, -apple-system, "Noto Sans TC", sans-serif'>
-              系統無襯線（預設）
+            <option value='system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif'>
+              01 系統預設無襯線
             </option>
             <option value='"Noto Sans TC", -apple-system, system-ui, sans-serif'>
-              Noto Sans TC（清爽無襯線）
+              02 Noto Sans TC（清爽）
             </option>
             <option value='"Noto Serif TC", "Times New Roman", serif'>
-              Noto Serif TC（書卷風有襯線）
+              03 Noto Serif TC（書卷）
             </option>
             <option value='"PingFang TC", "Microsoft JhengHei", sans-serif'>
-              蘋方 / 微軟正黑
+              04 蘋方 / 微軟正黑
             </option>
-            <option value='"Courier New", monospace'>
-              打字機風格（等寬字）
+            <option value='"Heiti TC", "LiHei Pro", sans-serif'>
+              05 黑體（台灣 Heiti）
             </option>
+            <option value='"Hiragino Sans GB", "Hiragino Sans TC", sans-serif'>
+              06 Hiragino Sans
+            </option>
+            <option value='"Source Han Sans TC", "Noto Sans CJK TC", sans-serif'>
+              07 思源黑體 / Noto Sans CJK
+            </option>
+            <option value='"Source Han Serif TC", "Noto Serif CJK TC", serif'>
+              08 思源宋體 / Serif CJK
+            </option>
+            <option value='"DFKai-SB", "BiauKai", cursive'>
+              09 標楷體風格
+            </option>
+            <option value='"PMingLiU", "MingLiU", serif'>
+              10 新細明體 / 細明體
+            </option>
+            <option value='"cwTeXYen", "Noto Sans TC", sans-serif'>
+              11 cwTeXYen 圓體（若有安裝）
+            </option>
+            <option value='"cwTeXHei", "Noto Sans TC", sans-serif'>
+              12 cwTeXHei 黑體（若有安裝）
+            </option>
+            <option value='"cwTeXKai", "DFKai-SB", cursive'>
+              13 cwTeX 楷書（若有安裝）
+            </option>
+            <option value='"HanWangHeiLight", "Heiti TC", sans-serif'>
+              14 華康黑體系（若有安裝）
+            </option>
+            <option value='"HanWangMingLight", "PMingLiU", serif'>
+              15 華康明體系（若有安裝）
+            </option>
+            <option value='"Microsoft YaHei", "Microsoft JhengHei", sans-serif'>
+              16 微軟雅黑 / 正黑
+            </option>
+            <option value='"Apple LiGothic Medium", "Heiti TC", sans-serif'>
+              17 蘋果儷中黑
+            </option>
+            <option value='"Apple LiSung Light", "PMingLiU", serif'>
+              18 蘋果儷細宋
+            </option>
+            <option value='"Helvetica Neue", "Noto Sans TC", sans-serif'>
+              19 Helvetica Neue（西文＋中）
+            </option>
+            <option value='"Times New Roman", "Noto Serif TC", serif'>
+              20 Times New Roman（西文＋中）
+            </option>
+          </select>
+
+          <label for="fontSizeGlobal">文字大小：</label>
+          <select id="fontSizeGlobal">
+            <option value="0.9rem">小</option>
+            <option value="1rem" selected>中（預設）</option>
+            <option value="1.15rem">略大</option>
+            <option value="1.3rem">大</option>
+            <option value="1.5rem">特大</option>
           </select>
         </div>
 
@@ -507,6 +563,7 @@
     const imageInput = document.getElementById("imageInput");
     const imageContainer = document.getElementById("imageContainer");
     const fontSelect = document.getElementById("fontSelect");
+    const fontSizeGlobal = document.getElementById("fontSizeGlobal");
     const sizePreset = document.getElementById("sizePreset");
     const bgPreset = document.getElementById("bgPreset");
 
@@ -536,7 +593,7 @@
     editor.addEventListener("keyup", updatePreviewFromEditor);
     editor.addEventListener("mouseup", updatePreviewFromEditor);
 
-    // 工具列：使用 document.execCommand（簡單好用）
+    // 工具列：使用 document.execCommand
     toolbar.addEventListener("click", (e) => {
       const btn = e.target.closest("button");
       if (!btn) return;
@@ -544,13 +601,7 @@
       if (!cmd) return;
 
       editor.focus();
-
-      if (cmd === "undo" || cmd === "redo") {
-        document.execCommand(cmd, false, null);
-      } else {
-        document.execCommand(cmd, false, null);
-      }
-
+      document.execCommand(cmd, false, null);
       updatePreviewFromEditor();
     });
 
@@ -559,9 +610,6 @@
       document.execCommand("removeFormat", false, null);
       updatePreviewFromEditor();
     });
-
-    // 初始同步一次
-    updatePreviewFromEditor();
 
     // ---------- 顏文字小鍵盤 ----------
     const kaomojis = [
@@ -590,15 +638,29 @@
       kaomojiBar.appendChild(btn);
     });
 
-    // ---------- 字型切換 ----------
+    // ---------- 全局字型 & 文字大小 ----------
     function applyFont() {
       const fontFamily = fontSelect.value;
       editor.style.fontFamily = fontFamily;
       preview.style.fontFamily = fontFamily;
     }
 
-    fontSelect.addEventListener("change", applyFont);
+    function applyFontSize() {
+      const size = fontSizeGlobal.value;
+      editor.style.fontSize = size;
+      preview.style.fontSize = size;
+    }
+
+    fontSelect.addEventListener("change", () => {
+      applyFont();
+    });
+
+    fontSizeGlobal.addEventListener("change", () => {
+      applyFontSize();
+    });
+
     applyFont();
+    applyFontSize();
 
     // ---------- 卡片尺寸 & 背景樣式 ----------
     function applySizePreset() {
@@ -733,7 +795,7 @@
       const filename = `card-${Date.now()}.${type === "jpeg" ? "jpg" : "png"}`;
 
       html2canvas(preview, {
-        backgroundColor: null, // 使用目前卡片背景
+        backgroundColor: null,
         scale: 2,
       }).then((canvas) => {
         const dataUrl =
@@ -753,6 +815,9 @@
 
     savePngBtn.addEventListener("click", () => downloadPreviewAsImage("png"));
     saveJpgBtn.addEventListener("click", () => downloadPreviewAsImage("jpeg"));
+
+    // 初始同步一次
+    updatePreviewFromEditor();
   </script>
 </body>
 </html>
