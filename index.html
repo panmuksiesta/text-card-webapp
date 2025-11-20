@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>文字卡片產生器</title>
+  <title>文字卡片產生器 v2</title>
 
   <!-- 讓手機版好操作 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,7 +14,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="文字卡片產生器" />
 
-  <!-- 引入 html2canvas，用來把預覽區轉成圖片 -->
+  <!-- Google Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Serif+TC:wght@400;700&display=swap" />
+
+  <!-- html2canvas：把預覽區轉成圖片 -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <style>
@@ -33,21 +36,28 @@
     h1 {
       font-size: 1.3rem;
       text-align: center;
-      margin-bottom: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #777;
+      margin-bottom: 0.8rem;
     }
 
     .container {
-      max-width: 1000px;
+      max-width: 1100px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 0.75rem;
     }
 
     @media (min-width: 900px) {
       .main {
         display: flex;
-        gap: 1rem;
+        gap: 0.75rem;
         align-items: stretch;
       }
     }
@@ -55,50 +65,40 @@
     .panel {
       background: #ffffff;
       border-radius: 10px;
-      padding: 0.75rem;
+      padding: 0.6rem 0.75rem;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
 
     .panel-title {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.45rem;
     }
 
     .editor-panel {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.4rem;
     }
 
     .preview-panel {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 220px;
-      resize: vertical;
-      padding: 0.5rem;
-      font-size: 0.95rem;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      line-height: 1.5;
+      gap: 0.4rem;
     }
 
     label {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: #555;
     }
 
     select,
     button,
-    input[type="file"] {
-      font-size: 0.9rem;
+    input[type="file"],
+    input[type="range"] {
+      font-size: 0.85rem;
     }
 
     .top-bar {
@@ -116,38 +116,87 @@
       align-items: center;
     }
 
-    #fontSelect {
+    #fontSelect,
+    #sizePreset,
+    #bgPreset {
       padding: 0.25rem 0.4rem;
       border-radius: 6px;
       border: 1px solid #ccc;
+      background: #fff;
     }
 
-    .emoji-bar {
+    /* 進階文字編輯工具列 */
+    .toolbar {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.4rem;
-      margin-top: 0.3rem;
+      gap: 0.25rem;
+      margin-bottom: 0.3rem;
     }
 
-    .emoji-button {
+    .toolbar button,
+    .toolbar select {
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: #fafafa;
+      padding: 0.2rem 0.4rem;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .toolbar button.active {
+      background: #e0ecff;
+      border-color: #4a90e2;
+    }
+
+    .toolbar button:active {
+      background: #e0ecff;
+    }
+
+    #editor {
+      width: 100%;
+      min-height: 220px;
+      padding: 0.5rem;
+      font-size: 0.95rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      line-height: 1.5;
+      background: #fff;
+      overflow-y: auto;
+    }
+
+    #editor:focus {
+      outline: 2px solid #4a90e2;
+      outline-offset: 1px;
+    }
+
+    .kaomoji-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      margin-top: 0.3rem;
+      max-height: 130px;
+      overflow-y: auto;
+      padding-right: 0.2rem;
+    }
+
+    .kaomoji-button {
       border: none;
       border-radius: 6px;
-      padding: 0.2rem 0.35rem;
-      background: #f0f0f0;
+      padding: 0.15rem 0.35rem;
+      background: #f3f3f3;
       cursor: pointer;
-      font-size: 1.1rem;
-      transition: transform 0.05s ease, background 0.1s ease;
+      font-size: 0.78rem;
+      white-space: nowrap;
     }
 
-    .emoji-button:active {
-      transform: scale(0.96);
+    .kaomoji-button:active {
       background: #e0e0e0;
     }
 
-    /* 預覽區：會被轉成圖片的部分 */
+    /* 預覽區：會被轉成圖片的卡片 */
     #previewWrapper {
       background: #e0e0e0;
-      padding: 0.75rem;
+      padding: 0.6rem;
       border-radius: 10px;
       overflow-x: auto;
     }
@@ -156,25 +205,60 @@
       margin: 0 auto;
       width: 100%;
       max-width: 600px;
-      min-height: 250px;
-      padding: 1.2rem;
+      min-height: 260px;
+      padding: 1.1rem;
       background: #ffffff;
-      border-radius: 10px;
+      border-radius: 14px;
       border: 1px solid #ddd;
       word-break: break-word;
       line-height: 1.6;
+      color: #333;
+      position: relative;
     }
 
     #previewText {
-      white-space: pre-wrap;
-      margin-bottom: 0.75rem;
+      white-space: normal;
     }
 
-    #imageContainer img {
+    #previewText p {
+      margin: 0.2rem 0;
+    }
+
+    #previewText b,
+    #previewText strong {
+      font-weight: 700;
+    }
+
+    #previewText u {
+      text-decoration: underline;
+    }
+
+    #previewText i,
+    #previewText em {
+      font-style: italic;
+    }
+
+    #imageContainer {
+      margin-top: 0.5rem;
+      position: relative;
+    }
+
+    .img-wrapper {
+      display: inline-block;
+      position: relative;
+      margin: 0.2rem;
+      cursor: pointer;
+      transition: box-shadow 0.1s ease;
+    }
+
+    .img-wrapper img {
       max-width: 100%;
       display: block;
-      margin-bottom: 0.5rem;
       border-radius: 8px;
+    }
+
+    .img-wrapper.selected {
+      box-shadow: 0 0 0 2px #4a90e2;
     }
 
     .file-input-row {
@@ -182,7 +266,35 @@
       flex-wrap: wrap;
       gap: 0.5rem;
       align-items: center;
-      margin-top: 0.5rem;
+      margin-top: 0.4rem;
+    }
+
+    .image-controls {
+      margin-top: 0.3rem;
+      padding: 0.4rem;
+      border-radius: 8px;
+      background: #fafafa;
+      border: 1px solid #eee;
+      font-size: 0.78rem;
+    }
+
+    .image-controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 0.25rem;
+    }
+
+    .image-controls label {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      white-space: nowrap;
+    }
+
+    .image-controls input[type="range"] {
+      flex: 1;
     }
 
     .actions {
@@ -198,7 +310,7 @@
       border-radius: 8px;
       padding: 0.45rem 0.8rem;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       display: inline-flex;
       align-items: center;
       gap: 0.25rem;
@@ -223,17 +335,22 @@
     }
 
     .note {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: #777;
-      margin-top: 0.25rem;
+      margin-top: 0.2rem;
+    }
+
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>文字卡片產生器（文字 ➜ 圖片）</h1>
+    <h1>文字卡片產生器 v2（文字 ➜ 圖片）</h1>
+    <div class="subtitle">進階文字編輯 · 奶油 / 粉色 / 深色背景 · IG / 桌布比例 · 可調大小 / 位置圖片</div>
 
-    <!-- 上方工具列：字型選擇 -->
+    <!-- 上方工具列：字型、尺寸與背景樣式 -->
     <div class="panel">
       <div class="top-bar">
         <div class="top-bar-group">
@@ -242,58 +359,81 @@
             <option value='system-ui, -apple-system, "Noto Sans TC", sans-serif'>
               系統無襯線（預設）
             </option>
+            <option value='"Noto Sans TC", -apple-system, system-ui, sans-serif'>
+              Noto Sans TC（清爽無襯線）
+            </option>
+            <option value='"Noto Serif TC", "Times New Roman", serif'>
+              Noto Serif TC（書卷風有襯線）
+            </option>
             <option value='"PingFang TC", "Microsoft JhengHei", sans-serif'>
               蘋方 / 微軟正黑
-            </option>
-            <option value='"Times New Roman", "Noto Serif TC", serif'>
-              有襯線風格（Times）
             </option>
             <option value='"Courier New", monospace'>
               打字機風格（等寬字）
             </option>
           </select>
         </div>
+
+        <div class="top-bar-group">
+          <label for="sizePreset">卡片比例：</label>
+          <select id="sizePreset">
+            <option value="auto">自動（依內容）</option>
+            <option value="square">IG 正方形 1:1</option>
+            <option value="portrait">IG 直立 4:5</option>
+            <option value="wallpaper">手機桌布 9:16</option>
+          </select>
+
+          <label for="bgPreset">背景樣式：</label>
+          <select id="bgPreset">
+            <option value="white">純白簡約</option>
+            <option value="cream">奶油米色</option>
+            <option value="pink">柔和粉</option>
+            <option value="dark">夜間深色</option>
+          </select>
+        </div>
       </div>
     </div>
 
     <div class="main">
-      <!-- 左邊：文字編輯器 & 表情符號 -->
+      <!-- 左邊：進階文字編輯器 & 顏文字 -->
       <div class="panel editor-panel">
-        <div class="panel-title">1. 文字編輯器</div>
-        <textarea id="editor" placeholder="在這裡輸入你想要的文字，換行、加表情、等等。"></textarea>
+        <div class="panel-title">1. 進階文字編輯器</div>
 
+        <!-- 工具列 -->
+        <div class="toolbar" id="toolbar">
+          <button type="button" data-command="bold"><b>B</b></button>
+          <button type="button" data-command="italic"><i>I</i></button>
+          <button type="button" data-command="underline"><u>U</u></button>
+          <button type="button" data-command="strikeThrough"><s>S</s></button>
+          <button type="button" data-command="justifyLeft">左</button>
+          <button type="button" data-command="justifyCenter">中</button>
+          <button type="button" data-command="justifyRight">右</button>
+          <button type="button" data-command="insertUnorderedList">● 清單</button>
+          <button type="button" data-command="insertOrderedList">1. 清單</button>
+          <button type="button" data-command="undo">↺</button>
+          <button type="button" data-command="redo">↻</button>
+          <button type="button" id="clearFormattingBtn">清除格式</button>
+        </div>
+
+        <!-- 可編輯區 -->
+        <div id="editor" contenteditable="true">
+在這裡輸入你想要的文字，
+可以使用粗體、底線、置中、清單等功能，
+也可以搭配下面的顏文字小鍵盤 (๑•̀ㅂ•́)و✧
+        </div>
+
+        <!-- 顏文字 -->
         <div>
-          <label>2. 表情符號小鍵盤（點一下會插入到文字裡）：</label>
-          <div class="emoji-bar" id="emojiBar">
-            <!-- 一些常用表情，可以依喜好再加 -->
-            <button type="button" class="emoji-button">😀</button>
-            <button type="button" class="emoji-button">😂</button>
-            <button type="button" class="emoji-button">🥹</button>
-            <button type="button" class="emoji-button">😊</button>
-            <button type="button" class="emoji-button">😍</button>
-            <button type="button" class="emoji-button">😎</button>
-            <button type="button" class="emoji-button">🤔</button>
-            <button type="button" class="emoji-button">😭</button>
-            <button type="button" class="emoji-button">🥳</button>
-            <button type="button" class="emoji-button">❤️</button>
-            <button type="button" class="emoji-button">🧡</button>
-            <button type="button" class="emoji-button">💛</button>
-            <button type="button" class="emoji-button">💚</button>
-            <button type="button" class="emoji-button">💙</button>
-            <button type="button" class="emoji-button">⭐</button>
-            <button type="button" class="emoji-button">✨</button>
-            <button type="button" class="emoji-button">🌈</button>
-            <button type="button" class="emoji-button">🍰</button>
-            <button type="button" class="emoji-button">☕</button>
-            <button type="button" class="emoji-button">🐶</button>
-            <button type="button" class="emoji-button">🐱</button>
+          <label>2. 顏文字小鍵盤（點一下會插入到文字裡）：</label>
+          <div class="kaomoji-bar" id="kaomojiBar">
+            <!-- 顏文字會由 JavaScript 自動產生 -->
           </div>
         </div>
       </div>
 
       <!-- 右邊：預覽區 + 圖片插入 + 下載 -->
       <div class="panel preview-panel">
-        <div class="panel-title">3. 文字 + 圖片預覽區（最後會變成圖片）</div>
+        <div class="panel-title">3. 預覽區（最後會變成圖片）</div>
 
         <div id="previewWrapper">
           <div id="preview">
@@ -314,6 +454,27 @@
           小提醒：插入的是你本機的圖片，只會顯示在這個網頁裡，不會上傳到伺服器。
         </div>
 
+        <!-- 圖片調整工具 -->
+        <div class="image-controls hidden" id="imageControls">
+          <div>目前選取的圖片：可調整大小與位置</div>
+          <div class="image-controls-row">
+            <label>大小
+              <input type="range" id="imgSizeRange" min="50" max="200" value="100" />
+              <span id="imgSizeLabel">100%</span>
+            </label>
+          </div>
+          <div class="image-controls-row">
+            <label>左右位移
+              <input type="range" id="imgOffsetX" min="-200" max="200" value="0" />
+            </label>
+          </div>
+          <div class="image-controls-row">
+            <label>上下位移
+              <input type="range" id="imgOffsetY" min="-200" max="200" value="0" />
+            </label>
+          </div>
+        </div>
+
         <!-- 匯出按鈕 -->
         <div class="actions">
           <button type="button" class="btn btn-main" id="savePngBtn">
@@ -324,14 +485,14 @@
           </button>
         </div>
         <div class="note">
-          iPhone 上如果按了下載只是打開圖片，也可以長按圖片 ➜ 儲存到相簿。
+          iPhone 上如果按了下載只是打開圖片，可以長按圖片 ➜ 儲存到相簿。
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // Service Worker 註冊（需要在 https 網站或 localhost 上才會生效）
+    // PWA Service Worker 註冊
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
@@ -341,63 +502,164 @@
     }
 
     const editor = document.getElementById("editor");
+    const preview = document.getElementById("preview");
     const previewText = document.getElementById("previewText");
     const imageInput = document.getElementById("imageInput");
     const imageContainer = document.getElementById("imageContainer");
     const fontSelect = document.getElementById("fontSelect");
-    const preview = document.getElementById("preview");
+    const sizePreset = document.getElementById("sizePreset");
+    const bgPreset = document.getElementById("bgPreset");
 
     const savePngBtn = document.getElementById("savePngBtn");
     const saveJpgBtn = document.getElementById("saveJpgBtn");
     const clearImagesBtn = document.getElementById("clearImagesBtn");
 
-    // 文字更新 ➜ 即時反映到預覽區
-    function escapeHtml(str) {
-      return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    const toolbar = document.getElementById("toolbar");
+    const clearFormattingBtn = document.getElementById("clearFormattingBtn");
+
+    const kaomojiBar = document.getElementById("kaomojiBar");
+
+    const imageControls = document.getElementById("imageControls");
+    const imgSizeRange = document.getElementById("imgSizeRange");
+    const imgSizeLabel = document.getElementById("imgSizeLabel");
+    const imgOffsetX = document.getElementById("imgOffsetX");
+    const imgOffsetY = document.getElementById("imgOffsetY");
+
+    let currentImageWrapper = null;
+
+    // ---------- 進階文字編輯 ----------
+    function updatePreviewFromEditor() {
+      previewText.innerHTML = editor.innerHTML;
     }
 
-    function updatePreview() {
-      const text = editor.value;
-      previewText.innerHTML = escapeHtml(text).replace(/\n/g, "<br>");
-    }
+    editor.addEventListener("input", updatePreviewFromEditor);
+    editor.addEventListener("keyup", updatePreviewFromEditor);
+    editor.addEventListener("mouseup", updatePreviewFromEditor);
 
-    editor.addEventListener("input", updatePreview);
-    updatePreview();
+    // 工具列：使用 document.execCommand（簡單好用）
+    toolbar.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      const cmd = btn.dataset.command;
+      if (!cmd) return;
 
-    // 表情符號按鈕：插入到文字編輯器
-    function insertAtCursor(textarea, text) {
-      const start = textarea.selectionStart ?? textarea.value.length;
-      const end = textarea.selectionEnd ?? textarea.value.length;
-      const before = textarea.value.slice(0, start);
-      const after = textarea.value.slice(end);
-      textarea.value = before + text + after;
+      editor.focus();
 
-      const newPos = start + text.length;
-      textarea.selectionStart = textarea.selectionEnd = newPos;
-      textarea.focus();
-      updatePreview();
-    }
-
-    document.getElementById("emojiBar").addEventListener("click", (e) => {
-      if (e.target.classList.contains("emoji-button")) {
-        const emoji = e.target.textContent;
-        insertAtCursor(editor, emoji);
+      if (cmd === "undo" || cmd === "redo") {
+        document.execCommand(cmd, false, null);
+      } else {
+        document.execCommand(cmd, false, null);
       }
+
+      updatePreviewFromEditor();
     });
 
-    // 字型切換
-    fontSelect.addEventListener("change", () => {
+    clearFormattingBtn.addEventListener("click", () => {
+      editor.focus();
+      document.execCommand("removeFormat", false, null);
+      updatePreviewFromEditor();
+    });
+
+    // 初始同步一次
+    updatePreviewFromEditor();
+
+    // ---------- 顏文字小鍵盤 ----------
+    const kaomojis = [
+      "(๑•̀ㅂ•́)و✧","(｡•̀ᴗ-)✧","(´･ω･`)","(｡･ω･｡)","(๑´0`๑)",
+      "(⁎˃ᴗ˂⁎)","( ˘•ω•˘ )","(╯°□°）╯︵ ┻━┻","(つ´ω`)つ","(ꈍᴗꈍ)",
+      "(´｡• ᵕ •｡`)","(｡◕‿◕｡)","(ง •̀_•́)ง","(〃･ω･)ﾉ","( ・∀・)ﾉ",
+      "( ´ ▽ ` )ﾉ","(ಥ_ಥ)","(ノ∀`*)","( ・_・)ノ","(⁎⁍̴̛ᴗ⁍̴̛⁎)",
+      "(￣▽￣)ノ","(˘･_･˘)","(งᐖ)ว","(๑•﹏•)","(╯︵╰,)",
+      "(๑˃̵ᴗ˂̵)و","(灬º‿º灬)♡","(ง •̀_•́)ง ✧","(≧▽≦)","(╬ Ò ‸ Ó)",
+      "¯\\_(ツ)_/¯","(๑•́ ₃ •̀๑)","(๑˘･з･˘)","(╯3╰)","(๑°⌓°๑)",
+      "(⊙_⊙)","(⊙ˍ⊙)","(ノಠ益ಠ)ノ","(¬_¬ )","( ˘ω˘ )",
+      "(ᗒᗨᗕ)","(๑´ڡ`๑)","(๑¯∀¯๑)","(｡•́︿•̀｡)","(つд⊂)",
+      "(๑>؂<๑)","(๑•॒̀ ູ॒•́๑)","(☉｡☉)!","(๑•ᴗ•๑)","(,,・ω・,,)"
+    ];
+
+    kaomojis.forEach((k) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "kaomoji-button";
+      btn.textContent = k;
+      btn.addEventListener("click", () => {
+        editor.focus();
+        document.execCommand("insertText", false, k);
+        updatePreviewFromEditor();
+      });
+      kaomojiBar.appendChild(btn);
+    });
+
+    // ---------- 字型切換 ----------
+    function applyFont() {
       const fontFamily = fontSelect.value;
       editor.style.fontFamily = fontFamily;
       preview.style.fontFamily = fontFamily;
-    });
+    }
 
-    // 插入圖片（本機）
+    fontSelect.addEventListener("change", applyFont);
+    applyFont();
+
+    // ---------- 卡片尺寸 & 背景樣式 ----------
+    function applySizePreset() {
+      const v = sizePreset.value;
+      preview.style.aspectRatio = "";
+      preview.style.minHeight = "260px";
+
+      if (v === "square") {
+        preview.style.aspectRatio = "1 / 1";
+      } else if (v === "portrait") {
+        preview.style.aspectRatio = "4 / 5";
+      } else if (v === "wallpaper") {
+        preview.style.aspectRatio = "9 / 16";
+      }
+    }
+
+    function applyBgPreset() {
+      const v = bgPreset.value;
+      if (v === "white") {
+        preview.style.background = "#ffffff";
+        preview.style.color = "#333";
+      } else if (v === "cream") {
+        preview.style.background = "#fff7e6";
+        preview.style.color = "#40342a";
+      } else if (v === "pink") {
+        preview.style.background = "#ffeaf3";
+        preview.style.color = "#4a2b3a";
+      } else if (v === "dark") {
+        preview.style.background = "#1f2430";
+        preview.style.color = "#f5f5f5";
+      }
+    }
+
+    sizePreset.addEventListener("change", applySizePreset);
+    bgPreset.addEventListener("change", applyBgPreset);
+    applySizePreset();
+    applyBgPreset();
+
+    // ---------- 圖片插入 & 調整 ----------
+    function selectImageWrapper(wrapper) {
+      if (currentImageWrapper) {
+        currentImageWrapper.classList.remove("selected");
+      }
+      currentImageWrapper = wrapper;
+      if (currentImageWrapper) {
+        currentImageWrapper.classList.add("selected");
+        imageControls.classList.remove("hidden");
+
+        const scale = parseFloat(currentImageWrapper.dataset.scale || "1");
+        const offsetX = parseFloat(currentImageWrapper.dataset.offsetX || "0");
+        const offsetY = parseFloat(currentImageWrapper.dataset.offsetY || "0");
+
+        imgSizeRange.value = Math.round(scale * 100);
+        imgSizeLabel.textContent = imgSizeRange.value + "%";
+        imgOffsetX.value = offsetX;
+        imgOffsetY.value = offsetY;
+      } else {
+        imageControls.classList.add("hidden");
+      }
+    }
+
     imageInput.addEventListener("change", (e) => {
       const files = Array.from(e.target.files || []);
       if (!files.length) return;
@@ -407,9 +669,21 @@
 
         const reader = new FileReader();
         reader.onload = (event) => {
+          const wrapper = document.createElement("div");
+          wrapper.className = "img-wrapper";
+          wrapper.dataset.scale = "1";
+          wrapper.dataset.offsetX = "0";
+          wrapper.dataset.offsetY = "0";
+
           const img = document.createElement("img");
           img.src = event.target.result;
-          imageContainer.appendChild(img);
+          wrapper.appendChild(img);
+
+          wrapper.addEventListener("click", () => {
+            selectImageWrapper(wrapper);
+          });
+
+          imageContainer.appendChild(wrapper);
         };
         reader.readAsDataURL(file);
       });
@@ -417,18 +691,49 @@
       imageInput.value = "";
     });
 
-    // 清除所有圖片
     clearImagesBtn.addEventListener("click", () => {
       imageContainer.innerHTML = "";
+      currentImageWrapper = null;
+      imageControls.classList.add("hidden");
     });
 
-    // 把預覽區轉成圖片並下載
+    function updateCurrentImageTransform() {
+      if (!currentImageWrapper) return;
+      const scale = parseFloat(currentImageWrapper.dataset.scale || "1");
+      const offsetX = parseFloat(currentImageWrapper.dataset.offsetX || "0");
+      const offsetY = parseFloat(currentImageWrapper.dataset.offsetY || "0");
+
+      currentImageWrapper.style.transform =
+        "translate(" + offsetX + "px, " + offsetY + "px) scale(" + scale + ")";
+    }
+
+    imgSizeRange.addEventListener("input", () => {
+      if (!currentImageWrapper) return;
+      const scale = parseFloat(imgSizeRange.value) / 100;
+      currentImageWrapper.dataset.scale = String(scale);
+      imgSizeLabel.textContent = imgSizeRange.value + "%";
+      updateCurrentImageTransform();
+    });
+
+    imgOffsetX.addEventListener("input", () => {
+      if (!currentImageWrapper) return;
+      currentImageWrapper.dataset.offsetX = String(imgOffsetX.value);
+      updateCurrentImageTransform();
+    });
+
+    imgOffsetY.addEventListener("input", () => {
+      if (!currentImageWrapper) return;
+      currentImageWrapper.dataset.offsetY = String(imgOffsetY.value);
+      updateCurrentImageTransform();
+    });
+
+    // ---------- 匯出圖片 ----------
     function downloadPreviewAsImage(type) {
       const format = type === "jpeg" ? "image/jpeg" : "image/png";
       const filename = `card-${Date.now()}.${type === "jpeg" ? "jpg" : "png"}`;
 
       html2canvas(preview, {
-        backgroundColor: "#ffffff",
+        backgroundColor: null, // 使用目前卡片背景
         scale: 2,
       }).then((canvas) => {
         const dataUrl =
