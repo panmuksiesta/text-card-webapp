@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>文字卡片產生器 v2.1</title>
+  <title>文字卡片產生器 v2.2</title>
 
   <!-- 讓手機版好操作 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -106,7 +106,7 @@
       flex-wrap: wrap;
       gap: 0.5rem;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-end;
     }
 
     .top-bar-group {
@@ -116,8 +116,6 @@
       align-items: center;
     }
 
-    #fontSelect,
-    #fontSizeGlobal,
     #sizePreset,
     #bgPreset {
       padding: 0.25rem 0.4rem;
@@ -153,11 +151,15 @@
       background: #e0ecff;
     }
 
+    .toolbar select {
+      background: #fff;
+    }
+
     #editor {
       width: 100%;
       min-height: 220px;
       padding: 0.5rem;
-      font-size: 1rem; /* 會被 JS 覆蓋成全局文字大小 */
+      font-size: 1rem;
       border-radius: 8px;
       border: 1px solid #ccc;
       line-height: 1.5;
@@ -215,7 +217,7 @@
       line-height: 1.6;
       color: #333;
       position: relative;
-      font-size: 1rem; /* 會被 JS 覆蓋成全局文字大小 */
+      font-size: 1rem;
     }
 
     #previewText {
@@ -349,15 +351,54 @@
 </head>
 <body>
   <div class="container">
-    <h1>文字卡片產生器 v2.1（文字 ➜ 圖片）</h1>
-    <div class="subtitle">進階文字編輯 · 20 種字型 · 文字大小 · 奶油 / 粉色 / 深色 · IG / 桌布比例 · 可調圖片</div>
+    <h1>文字卡片產生器 v2.2（文字 ➜ 圖片）</h1>
+    <div class="subtitle">每個字可獨立字型 / 大小 · 奶油 / 粉色 / 深色 · IG / 桌布比例 · 可調圖片</div>
 
-    <!-- 上方工具列：字型、文字大小、尺寸與背景樣式 -->
+    <!-- 上方：卡片比例與背景樣式 -->
     <div class="panel">
       <div class="top-bar">
         <div class="top-bar-group">
-          <label for="fontSelect">字型：</label>
-          <select id="fontSelect">
+          <label for="sizePreset">卡片比例：</label>
+          <select id="sizePreset">
+            <option value="auto">自動（依內容）</option>
+            <option value="square">IG 正方形 1:1</option>
+            <option value="portrait">IG 直立 4:5</option>
+            <option value="wallpaper">手機桌布 9:16</option>
+          </select>
+
+          <label for="bgPreset">背景樣式：</label>
+          <select id="bgPreset">
+            <option value="white">純白簡約</option>
+            <option value="cream">奶油米色</option>
+            <option value="pink">柔和粉</option>
+            <option value="dark">夜間深色</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="main">
+      <!-- 左邊：進階文字編輯器 & 顏文字 -->
+      <div class="panel editor-panel">
+        <div class="panel-title">1. 進階文字編輯器</div>
+
+        <!-- 工具列 -->
+        <div class="toolbar" id="toolbar">
+          <button type="button" data-command="bold"><b>B</b></button>
+          <button type="button" data-command="italic"><i>I</i></button>
+          <button type="button" data-command="underline"><u>U</u></button>
+          <button type="button" data-command="strikeThrough"><s>S</s></button>
+          <button type="button" data-command="justifyLeft">左</button>
+          <button type="button" data-command="justifyCenter">中</button>
+          <button type="button" data-command="justifyRight">右</button>
+          <button type="button" data-command="insertUnorderedList">● 清單</button>
+          <button type="button" data-command="insertOrderedList">1. 清單</button>
+          <button type="button" data-command="undo">↺</button>
+          <button type="button" data-command="redo">↻</button>
+          <button type="button" id="clearFormattingBtn">清除格式</button>
+
+          <select id="inlineFontSelect">
+            <option value="">字型（選取套用）</option>
             <option value='system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif'>
               01 系統預設無襯線
             </option>
@@ -413,69 +454,30 @@
               18 蘋果儷細宋
             </option>
             <option value='"Helvetica Neue", "Noto Sans TC", sans-serif'>
-              19 Helvetica Neue（西文＋中）
+              19 Helvetica Neue
             </option>
             <option value='"Times New Roman", "Noto Serif TC", serif'>
-              20 Times New Roman（西文＋中）
+              20 Times New Roman
             </option>
           </select>
 
-          <label for="fontSizeGlobal">文字大小：</label>
-          <select id="fontSizeGlobal">
+          <select id="inlineFontSize">
+            <option value="">字級（選取套用）</option>
+            <option value="0.8rem">微小</option>
             <option value="0.9rem">小</option>
-            <option value="1rem" selected>中（預設）</option>
+            <option value="1rem">中（預設）</option>
             <option value="1.15rem">略大</option>
             <option value="1.3rem">大</option>
             <option value="1.5rem">特大</option>
           </select>
         </div>
 
-        <div class="top-bar-group">
-          <label for="sizePreset">卡片比例：</label>
-          <select id="sizePreset">
-            <option value="auto">自動（依內容）</option>
-            <option value="square">IG 正方形 1:1</option>
-            <option value="portrait">IG 直立 4:5</option>
-            <option value="wallpaper">手機桌布 9:16</option>
-          </select>
-
-          <label for="bgPreset">背景樣式：</label>
-          <select id="bgPreset">
-            <option value="white">純白簡約</option>
-            <option value="cream">奶油米色</option>
-            <option value="pink">柔和粉</option>
-            <option value="dark">夜間深色</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div class="main">
-      <!-- 左邊：進階文字編輯器 & 顏文字 -->
-      <div class="panel editor-panel">
-        <div class="panel-title">1. 進階文字編輯器</div>
-
-        <!-- 工具列 -->
-        <div class="toolbar" id="toolbar">
-          <button type="button" data-command="bold"><b>B</b></button>
-          <button type="button" data-command="italic"><i>I</i></button>
-          <button type="button" data-command="underline"><u>U</u></button>
-          <button type="button" data-command="strikeThrough"><s>S</s></button>
-          <button type="button" data-command="justifyLeft">左</button>
-          <button type="button" data-command="justifyCenter">中</button>
-          <button type="button" data-command="justifyRight">右</button>
-          <button type="button" data-command="insertUnorderedList">● 清單</button>
-          <button type="button" data-command="insertOrderedList">1. 清單</button>
-          <button type="button" data-command="undo">↺</button>
-          <button type="button" data-command="redo">↻</button>
-          <button type="button" id="clearFormattingBtn">清除格式</button>
-        </div>
-
         <!-- 可編輯區 -->
         <div id="editor" contenteditable="true">
 在這裡輸入你想要的文字，
 可以使用粗體、底線、置中、清單等功能，
-也可以搭配下面的顏文字小鍵盤 (๑•̀ㅂ•́)و✧
+也可以針對選取的字詞調整「字型」和「字級」，
+搭配下面的顏文字小鍵盤 (๑•̀ㅂ•́)و✧
         </div>
 
         <!-- 顏文字 -->
@@ -562,8 +564,6 @@
     const previewText = document.getElementById("previewText");
     const imageInput = document.getElementById("imageInput");
     const imageContainer = document.getElementById("imageContainer");
-    const fontSelect = document.getElementById("fontSelect");
-    const fontSizeGlobal = document.getElementById("fontSizeGlobal");
     const sizePreset = document.getElementById("sizePreset");
     const bgPreset = document.getElementById("bgPreset");
 
@@ -575,6 +575,9 @@
     const clearFormattingBtn = document.getElementById("clearFormattingBtn");
 
     const kaomojiBar = document.getElementById("kaomojiBar");
+
+    const inlineFontSelect = document.getElementById("inlineFontSelect");
+    const inlineFontSize = document.getElementById("inlineFontSize");
 
     const imageControls = document.getElementById("imageControls");
     const imgSizeRange = document.getElementById("imgSizeRange");
@@ -600,9 +603,14 @@
       const cmd = btn.dataset.command;
       if (!cmd) return;
 
-      editor.focus();
-      document.execCommand(cmd, false, null);
-      updatePreviewFromEditor();
+      if (cmd === "bold" || cmd === "italic" || cmd === "underline" || cmd === "strikeThrough" ||
+          cmd === "justifyLeft" || cmd === "justifyCenter" || cmd === "justifyRight" ||
+          cmd === "insertUnorderedList" || cmd === "insertOrderedList" ||
+          cmd === "undo" || cmd === "redo") {
+        editor.focus();
+        document.execCommand(cmd, false, null);
+        updatePreviewFromEditor();
+      }
     });
 
     clearFormattingBtn.addEventListener("click", () => {
@@ -638,29 +646,49 @@
       kaomojiBar.appendChild(btn);
     });
 
-    // ---------- 全局字型 & 文字大小 ----------
-    function applyFont() {
-      const fontFamily = fontSelect.value;
-      editor.style.fontFamily = fontFamily;
-      preview.style.fontFamily = fontFamily;
-    }
-
-    function applyFontSize() {
-      const size = fontSizeGlobal.value;
-      editor.style.fontSize = size;
-      preview.style.fontSize = size;
-    }
-
-    fontSelect.addEventListener("change", () => {
-      applyFont();
+    // ---------- 選取套用字型 ----------
+    inlineFontSelect.addEventListener("change", () => {
+      const value = inlineFontSelect.value;
+      if (!value) return;
+      editor.focus();
+      document.execCommand("fontName", false, value);
+      updatePreviewFromEditor();
+      inlineFontSelect.selectedIndex = 0; // 套用完回到提示
     });
 
-    fontSizeGlobal.addEventListener("change", () => {
-      applyFontSize();
-    });
+    // ---------- 選取套用字級（大小） ----------
+    function applyFontSizeToSelection(size) {
+      const selection = window.getSelection();
+      if (!selection.rangeCount) return;
 
-    applyFont();
-    applyFontSize();
+      const range = selection.getRangeAt(0);
+      if (range.collapsed) return;
+
+      // 使用 span 包住選取文字
+      const span = document.createElement("span");
+      span.style.fontSize = size;
+
+      try {
+        range.surroundContents(span);
+      } catch (e) {
+        const contents = range.extractContents();
+        span.appendChild(contents);
+        range.insertNode(span);
+      }
+
+      selection.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(span);
+      selection.addRange(newRange);
+      updatePreviewFromEditor();
+    }
+
+    inlineFontSize.addEventListener("change", () => {
+      const value = inlineFontSize.value;
+      if (!value) return;
+      applyFontSizeToSelection(value);
+      inlineFontSize.selectedIndex = 0;
+    });
 
     // ---------- 卡片尺寸 & 背景樣式 ----------
     function applySizePreset() {
