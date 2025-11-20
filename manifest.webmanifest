@@ -1,0 +1,9 @@
+{
+  "name": "文字卡片產生器",
+  "short_name": "文字卡片",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#f5f5f5",
+  "lang": "zh-Hant"
+}

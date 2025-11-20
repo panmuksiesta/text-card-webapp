@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>文字卡片產生器</title>
+
+  <!-- 讓手機版好操作 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- PWA 設定 -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#f5f5f5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="文字卡片產生器" />
+
+  <!-- 引入 html2canvas，用來把預覽區轉成圖片 -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 1rem;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "Noto Sans TC", "PingFang TC", sans-serif;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      font-size: 1.3rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    @media (min-width: 900px) {
+      .main {
+        display: flex;
+        gap: 1rem;
+        align-items: stretch;
+      }
+    }
+
+    .panel {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 0.75rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .editor-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .preview-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      padding: 0.5rem;
+      font-size: 0.95rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      line-height: 1.5;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: #555;
+    }
+
+    select,
+    button,
+    input[type="file"] {
+      font-size: 0.9rem;
+    }
+
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .top-bar-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    #fontSelect {
+      padding: 0.25rem 0.4rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .emoji-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.3rem;
+    }
+
+    .emoji-button {
+      border: none;
+      border-radius: 6px;
+      padding: 0.2rem 0.35rem;
+      background: #f0f0f0;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: transform 0.05s ease, background 0.1s ease;
+    }
+
+    .emoji-button:active {
+      transform: scale(0.96);
+      background: #e0e0e0;
+    }
+
+    /* 預覽區：會被轉成圖片的部分 */
+    #previewWrapper {
+      background: #e0e0e0;
+      padding: 0.75rem;
+      border-radius: 10px;
+      overflow-x: auto;
+    }
+
+    #preview {
+      margin: 0 auto;
+      width: 100%;
+      max-width: 600px;
+      min-height: 250px;
+      padding: 1.2rem;
+      background: #ffffff;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      word-break: break-word;
+      line-height: 1.6;
+    }
+
+    #previewText {
+      white-space: pre-wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    #imageContainer img {
+      max-width: 100%;
+      display: block;
+      margin-bottom: 0.5rem;
+      border-radius: 8px;
+    }
+
+    .file-input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 0.5rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: flex-end;
+      margin-top: 0.5rem;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 0.45rem 0.8rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .btn-main {
+      background: #4a90e2;
+      color: #fff;
+    }
+
+    .btn-main:active {
+      background: #3a78bf;
+    }
+
+    .btn-secondary {
+      background: #eee;
+      color: #333;
+    }
+
+    .btn-secondary:active {
+      background: #ddd;
+    }
+
+    .note {
+      font-size: 0.8rem;
+      color: #777;
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>文字卡片產生器（文字 ➜ 圖片）</h1>
+
+    <!-- 上方工具列：字型選擇 -->
+    <div class="panel">
+      <div class="top-bar">
+        <div class="top-bar-group">
+          <label for="fontSelect">字型：</label>
+          <select id="fontSelect">
+            <option value='system-ui, -apple-system, "Noto Sans TC", sans-serif'>
+              系統無襯線（預設）
+            </option>
+            <option value='"PingFang TC", "Microsoft JhengHei", sans-serif'>
+              蘋方 / 微軟正黑
+            </option>
+            <option value='"Times New Roman", "Noto Serif TC", serif'>
+              有襯線風格（Times）
+            </option>
+            <option value='"Courier New", monospace'>
+              打字機風格（等寬字）
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="main">
+      <!-- 左邊：文字編輯器 & 表情符號 -->
+      <div class="panel editor-panel">
+        <div class="panel-title">1. 文字編輯器</div>
+        <textarea id="editor" placeholder="在這裡輸入你想要的文字，換行、加表情、等等。"></textarea>
+
+        <div>
+          <label>2. 表情符號小鍵盤（點一下會插入到文字裡）：</label>
+          <div class="emoji-bar" id="emojiBar">
+            <!-- 一些常用表情，可以依喜好再加 -->
+            <button type="button" class="emoji-button">😀</button>
+            <button type="button" class="emoji-button">😂</button>
+            <button type="button" class="emoji-button">🥹</button>
+            <button type="button" class="emoji-button">😊</button>
+            <button type="button" class="emoji-button">😍</button>
+            <button type="button" class="emoji-button">😎</button>
+            <button type="button" class="emoji-button">🤔</button>
+            <button type="button" class="emoji-button">😭</button>
+            <button type="button" class="emoji-button">🥳</button>
+            <button type="button" class="emoji-button">❤️</button>
+            <button type="button" class="emoji-button">🧡</button>
+            <button type="button" class="emoji-button">💛</button>
+            <button type="button" class="emoji-button">💚</button>
+            <button type="button" class="emoji-button">💙</button>
+            <button type="button" class="emoji-button">⭐</button>
+            <button type="button" class="emoji-button">✨</button>
+            <button type="button" class="emoji-button">🌈</button>
+            <button type="button" class="emoji-button">🍰</button>
+            <button type="button" class="emoji-button">☕</button>
+            <button type="button" class="emoji-button">🐶</button>
+            <button type="button" class="emoji-button">🐱</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右邊：預覽區 + 圖片插入 + 下載 -->
+      <div class="panel preview-panel">
+        <div class="panel-title">3. 文字 + 圖片預覽區（最後會變成圖片）</div>
+
+        <div id="previewWrapper">
+          <div id="preview">
+            <div id="previewText"></div>
+            <div id="imageContainer"></div>
+          </div>
+        </div>
+
+        <!-- 插入圖片 -->
+        <div class="file-input-row">
+          <label for="imageInput">4. 插入圖片：</label>
+          <input type="file" id="imageInput" accept="image/*" multiple />
+          <button type="button" class="btn btn-secondary" id="clearImagesBtn">
+            清除所有圖片
+          </button>
+        </div>
+        <div class="note">
+          小提醒：插入的是你本機的圖片，只會顯示在這個網頁裡，不會上傳到伺服器。
+        </div>
+
+        <!-- 匯出按鈕 -->
+        <div class="actions">
+          <button type="button" class="btn btn-main" id="savePngBtn">
+            存成 PNG
+          </button>
+          <button type="button" class="btn btn-main" id="saveJpgBtn">
+            存成 JPG
+          </button>
+        </div>
+        <div class="note">
+          iPhone 上如果按了下載只是打開圖片，也可以長按圖片 ➜ 儲存到相簿。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Service Worker 註冊（需要在 https 網站或 localhost 上才會生效）
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("service-worker.js")
+          .catch((err) => console.error("SW registration failed", err));
+      });
+    }
+
+    const editor = document.getElementById("editor");
+    const previewText = document.getElementById("previewText");
+    const imageInput = document.getElementById("imageInput");
+    const imageContainer = document.getElementById("imageContainer");
+    const fontSelect = document.getElementById("fontSelect");
+    const preview = document.getElementById("preview");
+
+    const savePngBtn = document.getElementById("savePngBtn");
+    const saveJpgBtn = document.getElementById("saveJpgBtn");
+    const clearImagesBtn = document.getElementById("clearImagesBtn");
+
+    // 文字更新 ➜ 即時反映到預覽區
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function updatePreview() {
+      const text = editor.value;
+      previewText.innerHTML = escapeHtml(text).replace(/\n/g, "<br>");
+    }
+
+    editor.addEventListener("input", updatePreview);
+    updatePreview();
+
+    // 表情符號按鈕：插入到文字編輯器
+    function insertAtCursor(textarea, text) {
+      const start = textarea.selectionStart ?? textarea.value.length;
+      const end = textarea.selectionEnd ?? textarea.value.length;
+      const before = textarea.value.slice(0, start);
+      const after = textarea.value.slice(end);
+      textarea.value = before + text + after;
+
+      const newPos = start + text.length;
+      textarea.selectionStart = textarea.selectionEnd = newPos;
+      textarea.focus();
+      updatePreview();
+    }
+
+    document.getElementById("emojiBar").addEventListener("click", (e) => {
+      if (e.target.classList.contains("emoji-button")) {
+        const emoji = e.target.textContent;
+        insertAtCursor(editor, emoji);
+      }
+    });
+
+    // 字型切換
+    fontSelect.addEventListener("change", () => {
+      const fontFamily = fontSelect.value;
+      editor.style.fontFamily = fontFamily;
+      preview.style.fontFamily = fontFamily;
+    });
+
+    // 插入圖片（本機）
+    imageInput.addEventListener("change", (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+
+      files.forEach((file) => {
+        if (!file.type.startsWith("image/")) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = document.createElement("img");
+          img.src = event.target.result;
+          imageContainer.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      });
+
+      imageInput.value = "";
+    });
+
+    // 清除所有圖片
+    clearImagesBtn.addEventListener("click", () => {
+      imageContainer.innerHTML = "";
+    });
+
+    // 把預覽區轉成圖片並下載
+    function downloadPreviewAsImage(type) {
+      const format = type === "jpeg" ? "image/jpeg" : "image/png";
+      const filename = `card-${Date.now()}.${type === "jpeg" ? "jpg" : "png"}`;
+
+      html2canvas(preview, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+      }).then((canvas) => {
+        const dataUrl =
+          format === "image/jpeg"
+            ? canvas.toDataURL("image/jpeg", 0.95)
+            : canvas.toDataURL("image/png");
+
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = filename;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+    }
+
+    savePngBtn.addEventListener("click", () => downloadPreviewAsImage("png"));
+    saveJpgBtn.addEventListener("click", () => downloadPreviewAsImage("jpeg"));
+  </script>
+</body>
+</html>
